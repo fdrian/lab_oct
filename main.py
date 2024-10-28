@@ -6,7 +6,6 @@ import base64
 import pyotp
 import mysql.connector
 import pickle  
-from connection import get_db_connection
 from werkzeug.utils import secure_filename
 import os
 import base64
@@ -16,6 +15,9 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 import re
 import json
+from flask_wtf.csrf import CSRFProtect
+import jwt
+
 
 # Configuração do Logger
 class SimpleFormatter(logging.Formatter):
@@ -37,26 +39,51 @@ logger.setLevel(logging.INFO)
 logger.addHandler(file_handler)
 
 # Carrega as variáveis do arquivo .env
+app = Flask(__name__)
 load_dotenv()
+csrf = CSRFProtect(app)
+
 
 # Inicialize a API do Google Gemini com a chave do arquivo .env
 genai_api_key = os.getenv('GOOGLE_GEMINI_API_KEY')
+app.secret_key = os.getenv("SECRET_KEY")  # CSRF e sessão
+
+UPLOAD_FOLDER = './uploads/pictures'
+ALLOWED_EXTENSIONS = {'png', 'jpg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 
 if not genai_api_key:
     raise Exception("GOOGLE_GEMINI_API_KEY não encontrado no arquivo .env")
 
 genai.configure(api_key=genai_api_key)
 
-app = Flask(__name__)
 
 # Diretório onde as imagens de perfil serão salvas
-UPLOAD_FOLDER = './uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 model = genai.GenerativeModel('gemini-1.5-flash')
+
+
+def get_db_connection():
+    # Retorna uma nova conexão com o banco de dados
+    try:
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASS"),
+            database=os.getenv("DB_NAME")
+        )
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return None
+
+def create_auth_cookie(user, passwd):
+    token_data = {"user": user, "passwd": hashlib.md5(passwd.encode()).hexdigest()}
+    token = jwt.encode(token_data, app.secret_key, algorithm="HS256")
+    return token
+
 
 def get_occ_data(user_message):
     prompt = f"""
@@ -181,8 +208,8 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/settings', methods=['GET', 'POST'])
-def settings():
+@app.route('/_settings', methods=['GET', 'POST'])
+def _settings():
     # Extract the TRIBO cookie
     cookie = request.cookies.get("TRIBO")
     
@@ -253,6 +280,30 @@ def settings():
     # If it's a GET request, render the settings page
     return render_template('settings.html')
 
+@app.route("/settings", methods=["POST"])
+@csrf.exempt
+def update_settings():
+    auth_token = request.cookies.get("TRIBO")
+    if not auth_token:
+        return jsonify({"error": "Not authenticated"}), 403
+
+    user_data = jwt.decode(auth_token, app.secret_key, algorithms=["HS256"])
+    user = user_data['user']
+
+    user_preferences_b64 = request.form.get('user_preferences')
+    if user_preferences_b64:
+        try:
+            user_preferences = json.loads(base64.b64decode(user_preferences_b64).decode())
+            if isinstance(user_preferences, dict):
+                mydb = get_db_connection()
+                mycursor = mydb.cursor()
+                query = "UPDATE login SET preferences = %s WHERE user = %s"
+                mycursor.execute(query, (json.dumps(user_preferences), user))
+                mydb.commit()
+                return jsonify({"message": "Settings updated successfully!"}), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to decode or parse preferences"}), 400
+
 @app.route('/api/v2/preferences', methods=['GET'])
 def insecure_deserialize():
     # Extrair o cookie TRIBO
@@ -305,6 +356,41 @@ def insecure_deserialize():
     finally:
         mycursor.close()
         mydb.close()
+
+
+# Endpoint para upload seguro de imagem de perfil
+@app.route('/upload/profile', methods=['POST'])
+@csrf.exempt
+def upload_profile():
+    auth_token = request.cookies.get("TRIBO")
+    if not auth_token:
+        return jsonify({"error": "Not authenticated"}), 403
+
+    user_data = jwt.decode(auth_token, app.secret_key, algorithms=["HS256"])
+    user = user_data['user']
+
+    if 'image' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+
+    file = request.files['image']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(f"{user}_{file.filename}")
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        # Atualiza caminho no banco de dados
+        mydb = get_db_connection()
+        if mydb is None:
+            return jsonify({"error": "Database connection failed"}), 500
+        mycursor = mydb.cursor()
+        query = "UPDATE login SET profile_image = %s WHERE user = %s"
+        mycursor.execute(query, (filename, user))
+        mydb.commit()
+
+        return jsonify({"message": "Profile image updated successfully"}), 200
+    else:
+        return jsonify({"error": "Invalid file type"}), 400
+
+
 
 
 @app.route('/settings/profile', methods=['POST'])
@@ -430,8 +516,8 @@ def login_panel():
     return render_template('login.html')
 
 
-@app.route('/api/v2/login', methods=['POST'])
-def login():
+@app.route('/_api/v2/login', methods=['POST'])
+def _login():
     if request.method == 'POST':
         is_valid = False
         data = request.get_json()
@@ -508,6 +594,45 @@ def login():
             log_request(request, 401)
             return abort(401)
 
+@app.route('/api/v2/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    user = data.get('user')
+    passwd = data.get('passwd')
+    mfa = data.get('mfa')
+
+    # Conexão com o banco de dados e verificação de usuário e senha
+    mydb = get_db_connection()
+    if mydb is None:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    try:
+        mycursor = mydb.cursor(dictionary=True)
+        query = "SELECT id, user, passwd, totp_secret, preferences FROM login WHERE user = %s"
+        mycursor.execute(query, (user,))
+        result = mycursor.fetchone()
+
+        if result and hashlib.md5(passwd.encode()).hexdigest() == result['passwd']:
+            totp_secret = result['totp_secret']
+            if totp_secret and (not mfa or not pyotp.TOTP(totp_secret).verify(mfa)):
+                return jsonify({"error": "Invalid MFA"}), 403
+
+            token = create_auth_cookie(result['user'], passwd)
+            preferences = result['preferences'] or "{}"
+            encoded_prefs = base64.b64encode(json.dumps(preferences).encode()).decode()
+
+            resp = make_response(jsonify({"success": "ok"}))
+            resp.set_cookie('TRIBO', token, httponly=True, secure=True, samesite='Strict')
+            resp.set_cookie('SETTINGS', encoded_prefs, httponly=True, secure=True, samesite='Strict')
+            return resp
+        else:
+            return jsonify({"error": "Invalid credentials"}), 401
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"error": "Database query failed"}), 500
+    finally:
+        mycursor.close()
+        mydb.close()
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -682,9 +807,6 @@ def logout():
     log_request(request, 302)
     return resp
 
-@app.route('/wakeup')
-def wakeup():
-    return render_template('wakeup.html')
 
 # Error handler for 404 Not Found
 @app.errorhandler(404)
