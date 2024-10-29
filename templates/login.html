@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>    
+    <h1>Login</h1>
+    
+    <div class="container">
+        <form id="loginForm">
+            <label for="user">User</label>
+            <input type="text" id="user" name="user" required aria-required="true" aria-label="Username">
+            <br>
+            <label for="passwd">Password</label>
+            <input type="password" id="passwd" name="passwd" required aria-required="true" aria-label="Password">
+            <br>
+            <div id="mfaDiv" style="display:none;">
+                <label for="otp_secret">Code</label>
+                <input type="text" id="otp_secret" name="otp_secret" aria-label="MFA Code">
+                <br>
+            </div>
+            <input type="hidden" id="csrf_token" name="csrf_token">
+            <button type="submit">Enter</button>
+        </form>
+        <script>
+            async function loadCsrfToken() {
+                // Fetch CSRF token from the backend and set in the hidden input
+                const response = await fetch('/csrf_token');
+                const data = await response.json();
+                document.getElementById('csrf_token').value = data.csrf_token;
+            }
+            
+            // Load the CSRF token when the page is loaded
+            document.addEventListener('DOMContentLoaded', loadCsrfToken);
+        </script>
+        <p id="responseMessage"></p>
+        <p><a href="/register">Register</a></p>
+    </div>
+
+    <script src="{{ url_for('static', filename='custom.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+
+</body>
+</html>
+

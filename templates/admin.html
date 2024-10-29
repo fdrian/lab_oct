@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome</h1>
+        <div class="welcome-message">
+            <p>Bem-vindo, {{ name }}!</p>
+            <p><strong>Flag:</strong> <span class="flag">{{ flag }}</span></p>
+        </div>
+        <a href="/logout" class="logout-button">Logout</a>
+    </div>
+</body>
+</html>

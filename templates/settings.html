@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Update Profile, Password, and OTP</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+   
+    <div class="container">
+        <h1>Settings</h1>
+        <form id="settingsForm" method="POST">
+            <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">        
+            <div class="settings-section">
+                <h3>Update Password</h3>
+                <input type="password" id="new_password" name="new_password" minlength="4" placeholder="Minimum 4 characters">
+            </div>
+            <button type="submit" id="submit_button">Save Settings</button>
+        </form>
+
+        <!-- Div for displaying success or error messages -->
+        <div id="responseMessage" style="color: red;"></div>
+
+        <!-- Form to upload profile image -->
+        <h3>Update Profile Image</h3>
+        <form id="profileForm" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">        
+            <label for="profile_image">Profile Image:</label>
+            <input type="file" id="profile_image" name="image" accept="image/*">
+            <button type="button" onclick="uploadProfileImage()">Upload Profile Image</button>
+        </form>
+
+        <!-- Div for displaying image upload message -->
+        <div id="profileResponseMessage" style="color: red;"></div>
+    </div>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout" class="btn">Logout</a>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+
+    <script>
+        // Function to read the SETTINGS cookie and populate the user preferences field
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+
+        // Handle form submission via JavaScript to process response without page reload
+        document.getElementById('settingsForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById('settingsForm'));
+
+            fetch('/settings', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    document.getElementById('responseMessage').innerText = data.message;
+                    document.getElementById('responseMessage').style.color = "yellow";
+                } else if (data.error) {
+                    document.getElementById('responseMessage').innerText = data.error;
+                    document.getElementById('responseMessage').style.color = "red";
+                }
+            })
+            .catch(error => {
+                document.getElementById('responseMessage').innerText = 'An error occurred. Please try again.';
+                document.getElementById('responseMessage').style.color = "red";
+            });
+        });
+
+        // Function to upload profile image via JavaScript without page reload
+        function uploadProfileImage() {
+            const formData = new FormData(document.getElementById('profileForm'));
+
+            fetch('/settings/profile', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    document.getElementById('profileResponseMessage').innerText = data.message;
+                    document.getElementById('profileResponseMessage').style.color = "yellow";
+                } else if (data.error) {
+                    document.getElementById('profileResponseMessage').innerText = data.error;
+                    document.getElementById('profileResponseMessage').style.color = "red";
+                }
+            })
+            .catch(error => {
+                document.getElementById('profileResponseMessage').innerText = 'An error occurred. Please try again.';
+                document.getElementById('profileResponseMessage').style.color = "red";
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>    
+    <h1>Register</h1>
+    <div class="container">
+        <form action="/register" method="POST">
+            <label for="username">Username:</label><br>
+            <input type="text" id="username" name="username" required><br><br>
+
+            <label for="password">Password:</label><br>
+            <input type="password" id="password" name="password" required><br><br>
+	    <input type="hidden" id="csrf_token" name="csrf_token">
+
+            <button type="submit">Register</button>
+        </form>
+        <script>
+            async function loadCsrfToken() {
+                // Fetch CSRF token from the backend and set in the hidden input
+                const response = await fetch('/csrf_token');
+                const data = await response.json();
+                document.getElementById('csrf_token').value = data.csrf_token;
+            }
+            
+            // Load the CSRF token when the page is loaded
+            document.addEventListener('DOMContentLoaded', loadCsrfToken);
+        </script>
+
+        <p><a href="/login">Login</a></p>
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+</body>
+</html>

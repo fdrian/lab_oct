@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css"> 
+    <title>Welcome to Dashboard</title>
+</head>
+<body>    
+    <div class="container">
+        <h1>Welcome, {{ user }}!</h1>
+        <p>You are successfully logged in to the dashboard.</p>
+        
+        <!-- Exibir imagem de perfil -->
+        <div class="profile-section">
+            <img src="{{ profile_image }}" alt="Profile Image" width="150" height="150" style="width: 150px; height: 150px; border-radius: 50%;">
+        </div>
+
+        <div class="btn-container">
+            <a href="/trick-or-treat" class="btn">Trick or Treat</a>
+            <a href="/inbox?sender=me" class="btn">Inbox</a>
+            <a href="/settings" class="btn">Settings</a>
+            <a href="/logout" class="btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- Script para exibir metadados no console -->
+    <script>
+        // Metadados recebidos do servidor
+        const metadata = {{ metadata | tojson }};
+        
+        // Exibir os metadados no console
+        console.log("Image Metadata:");
+        console.log("Format:", metadata.format);
+        console.log("Size:", metadata.size[0] + " x " + metadata.size[1] + " pixels");
+        console.log("Mode:", metadata.mode);
+        console.log("EXIF Data:", metadata.exif);
+    </script>
+</body>
+</html>

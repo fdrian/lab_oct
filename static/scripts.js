@@ -5,17 +5,19 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-// Obter o CSRF token
-const csrfToken = getCookie('csrf_token');
+// Função para obter o valor do token CSRF do input oculto
+function getCsrfToken() {
+    return document.getElementById('csrf_token').value;
+}
 
-// Adiciona o CSRF token a cada solicitação de fetch
+// Adiciona o token CSRF nas requisições do login
 document.getElementById('loginForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
     const user = document.getElementById('user').value.trim();
     const passwd = document.getElementById('passwd').value.trim();
-    const mfaDiv = document.getElementById('mfaDiv');
     const mfa = document.getElementById('otp_secret').value.trim();
+    const csrfToken = getCsrfToken();
     const responseMessage = document.getElementById('responseMessage');
     responseMessage.textContent = '';
 
@@ -24,7 +26,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken // Inclui o CSRF token aqui
+                'X-CSRFToken': csrfToken // Inclui o token CSRF aqui
             },
             body: JSON.stringify({ user, passwd })
         });
@@ -32,7 +34,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         const result = await response.json();
         if (response.ok) {
             if (result.requires_2fa) {
-                mfaDiv.style.display = 'block';
+                document.getElementById('mfaDiv').style.display = 'block';
                 if (!mfa) {
                     responseMessage.textContent = 'Please enter your MFA code.';
                     responseMessage.style.color = 'red';
@@ -67,8 +69,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 });
 
-// Mesma lógica para enviar o CSRF token nas demais requisições
-// Configurações e upload de imagem também deverão conter o `X-CSRFToken` nos cabeçalhos
+// Configurações e upload de imagem, incluindo CSRF token
 
 document.getElementById('settingsForm').addEventListener('submit', async function(event) {
     event.preventDefault();
@@ -110,7 +111,7 @@ document.getElementById('settingsForm').addEventListener('submit', async functio
     }
 });
 
-// Profile image upload
+// Upload de imagem de perfil com CSRF token
 document.getElementById('profileForm').addEventListener('submit', async function(event) {
     event.preventDefault();
     
@@ -143,3 +144,4 @@ document.getElementById('profileForm').addEventListener('submit', async function
         responseMessage.style.color = 'red';
     }
 });
+

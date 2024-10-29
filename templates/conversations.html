@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Conversations</h1>
+    <p>Select a user to view the conversation:</p>
+    <ul>
+        {% for contact in contacts %}
+            <li><a href="{{ url_for('view_conversation', sender=contact.contact) }}">{{ contact.contact }}</a></li>
+        {% endfor %}
+    </ul>
+    <a href="/inbox/send">New</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout">Logout</a>
+</body>
+</html>

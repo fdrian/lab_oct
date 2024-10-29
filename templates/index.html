@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boo!</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='custom.css') }}">    
+
+</head>
+<body>    
+    <div class="ghost">
+        <div class="ghost-body">
+            <div class="ghost-mouth"></div>
+        </div>
+        <div class="ghost-tail ghost-tail-1"></div>
+        <div class="ghost-tail ghost-tail-2"></div>
+        <div class="ghost-tail ghost-tail-3"></div>
+        <div class="ghost-tail ghost-tail-4"></div>
+    </div>
+    
+    <p class="phrase-output">loading payloads in treat bags</p>
+</body>
+</html>
+<script src="{{ url_for('static', filename='custom.js') }}"></script>
+

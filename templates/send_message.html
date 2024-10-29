@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Message</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Direct Message</h1>
+    <form id="sendMessageForm" method="POST" action="/inbox/send">
+        <input type="hidden" name="csrf_token" id="csrf_token" value="{{ csrf_token() }}">        
+        <label for="recipient">Choose the recipient:</label>
+        <select id="recipient" name="recipient" required>
+            <!-- Usuários serão carregados dinamicamente aqui -->
+        </select>
+
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="4" required></textarea>
+
+        <button type="submit">Send</button>
+    </form>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/inbox">Inbox</a>
+    <a href="/logout">Logout</a>
+
+    <script>
+        
+        async function loadCsrfToken() {
+            const response = await fetch('/csrf_token');
+            const data = await response.json();
+            document.getElementById('csrf_token').value = data.csrf_token;
+        }
+        
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/v2/users');
+                const users = await response.json();
+                const recipientSelect = document.getElementById('recipient');
+
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user;
+                    option.textContent = user;
+                    recipientSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Failed to load users:', error);
+            }
+        }
+
+        // Executa ao carregar a página
+        document.addEventListener('DOMContentLoaded', loadUsers);
+    </script>
+</body>
+</html>

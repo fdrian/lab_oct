@@ -1,0 +1,322 @@
+@import url(https://fonts.googleapis.com/css?family=Creepster);
+@import url(https://fonts.googleapis.com/css?family=Griffy);
+
+body {
+    background-color: #000000; 
+    color: #FC4C02; 
+    font-family: 'Griffy', sans-serif;
+    font-size: 2em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Ajustes para o efeito Matrix Rain */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+h1 {
+    font-family: 'Creepster', sans-serif;
+    font-size: 3em;
+    
+}
+
+.container {
+    background: rgba(0, 0, 0, 0.8); /* Fundo semi-transparente */
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 1; 
+}
+
+/* Container for the direct messages */
+.messages-container {
+    background: rgba(10, 10, 10, 0.9); /* Semi-transparent background */
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 1; 
+    max-width: 100%;
+    min-width: 600px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* Direct message text */
+.message {
+    color: #FC4C02;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+}
+
+.message-user {
+    font-weight: bold;
+    color: #FE9A0A;
+}
+
+.timestamp {
+    font-size: 0.4em; /* Smaller font size */
+    color: #E66B09; /* Subtle green */
+    margin-left: 10px;
+    vertical-align: middle;
+    opacity: 0.9; /* Slightly transparent */
+}
+
+
+/* Chat container with a semi-transparent background */
+.chat-container {
+    background: rgba(10, 10, 10, 0.9); /* Semi-transparent background */
+    border-radius: 10px;
+    padding: 20px;
+    z-index: 1; 
+    max-width: 100%;
+    min-width: 600px;
+    height: 100%;
+    overflow-y: auto;
+    
+}
+
+/* Chat messages */
+.chat-message {
+    color: #FC4C02;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+}
+
+.chat-user {
+    font-weight: bold;
+    color: #FE9A0A;
+}
+
+/* Chat input styles */
+.chat-input-container {
+    display: flex;
+    margin-top: 20px;
+}
+
+.chat-input {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 100px;  
+    padding: 10px;
+    border: 2px solid #FC4C02;
+    border-radius: 5px;
+    background-color: #111;
+    color: #FC4C02;
+    font-size: 1em;
+}
+.chat-input:focus {
+    border-color: #E34602;
+    outline: none;
+    background-color: #000;
+}
+
+.chat-send-button {
+    position: fixed;
+    bottom: 0;
+    right: 0; /* Align the button to the right */
+    padding: 10px;
+    margin-left: 10px;
+    background-color: #FC4C02;
+    color: #000000;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.chat-send-button:hover {
+    background-color: #E34602;
+}
+
+#responseMessage {
+    margin-top: 20px;
+    color: #ff0000;
+}
+
+/* Links in green */
+a {
+    color: #FC4C02;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #E34602;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin: 10px 0 5px;
+    font-size: 1.2em;
+    color: #FC4C02;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+input[type="date"] {
+    padding: 10px;
+    border: 2px solid #FC4C02; /* Borda verde */
+    border-radius: 5px;
+    background-color: #111; /* Fundo dos inputs */
+    color: #FC4C02; /* Texto dos inputs */
+    font-size: 1em;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus {
+    border-color: #E34602;
+    outline: none;
+    background-color: #000; 
+}
+
+button {
+    font-family: 'Creepster', sans-serif;
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #FC4C02;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #E34602; /* Fundo do botão ao passar o mouse */
+}
+
+#responseMessage {
+    margin-top: 20px;
+    color: #ff0000; /* Mensagem de erro em vermelho */
+}
+
+a {
+    color: #FC4C02; /* Link em verde */
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #E34602; /* Link em verde mais claro ao passar o mouse */
+}
+
+#dialogContainer {
+    max-width: 80%;
+    text-align: left;
+    padding: 20px;
+    
+}
+
+#dialog {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 1.2em;
+    line-height: 1.5;
+}
+
+/* Style for the checkbox container to take full width */
+label {
+    display: block;
+    width: 100%;
+    margin-bottom: 20px; /* Space between checkbox and next element */
+}
+
+/* Style for the checkbox */
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    background-color: black;
+    border: 2px solid #FC4C02; /* Green border */
+    appearance: none; /* Remove default appearance */
+    cursor: pointer;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #FC4C02; /* Green background when checked */
+    border-color: #E34602; /* Darker green border when checked */
+}
+
+input[type="checkbox"]:checked::before {
+    content: '✓'; /* Checkmark */
+    color: black;
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    font-size: 18px;
+}
+
+/* Style for the file input to occupy full width */
+input[type="file"] {
+    display: block;
+    width: 100%; /* Full width */
+    max-width: 100%;
+    font-size: 16px;
+    color: #FC4C02; /* Neon green text */
+    background-color: black; /* Black background */
+    border: 2px solid #FC4C02; /* Green border */
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 20px; /* Space between file input and next element */
+}
+
+input[type="file"]::file-selector-button {
+    background-color: #FC4C02; /* Green background for button */
+    color: black; /* Black text */
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    width: 100%;
+    box-sizing: border-box; /* Ensure it fits within the container */
+}
+
+input[type="file"]::file-selector-button:hover {
+    background-color: #E34602; /* Darker green when hovered */
+}
+
+/* Hover and focus effects */
+input[type="checkbox"]:hover,
+input[type="file"]:hover::file-selector-button {
+    box-shadow: 0 0 10px #FC4C02; /* Green glowing effect */
+}
+
+input[type="file"]:hover,
+input[type="checkbox"]:hover {
+    border-color: #E34602; /* Darker green border on hover */
+}
+
+input[type="file"]:focus,
+input[type="checkbox"]:focus {
+    outline: none; /* Remove default focus outline */
+    box-shadow: 0 0 10px #FC4C02; /* Green glowing effect on focus */
+}

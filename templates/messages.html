@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversation with {{ recipient }}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Conversation with {{ recipient }}</h1>
+    <div class="messages-container">
+        {% if messages %}
+            {% for msg in messages %}
+                <div class="message">
+                    <p>
+                        <span class="message-user">{{ msg.sender }}:</span>
+                        {{ msg.message }}
+                        <br><span class="timestamp"><em>{{ msg.timestamp }}</em></span>
+                    </p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No messages in this conversation.</p>
+        {% endif %}
+    </div>
+    <a href="/inbox">Inbox</a>
+    <a href="/inbox/send">New</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout">Logout</a>
+</body>
+</html>

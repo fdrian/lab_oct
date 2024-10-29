@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Chat</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chatMessages" class="chat-messages">
+            <!-- Chat messages will be dynamically added here -->
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
+            <input type="hidden" id="csrf_token" name="csrf_token">
+            <button id="sendButton" class="chat-send-button">Send</button>
+        </div>
+
+        <div id="responseMessage"></div>
+    </div>
+    
+    <script>
+    async function loadCsrfToken() {
+        const response = await fetch('/csrf_token');
+        const data = await response.json();
+        document.getElementById('csrf_token').value = data.csrf_token;
+    }
+
+    // Load the CSRF token when the page is loaded
+    document.addEventListener('DOMContentLoaded', loadCsrfToken);
+    </script>
+
+    <script>
+        async function loadMessages() {
+            try {
+                const response = await fetch('/chat/messages');
+                const messages = await response.json();
+
+                messages.reverse();
+
+                const chatBox = document.getElementById('chatMessages');
+                chatBox.innerHTML = '';
+
+                messages.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.classList.add('chat-message');
+                    div.innerHTML = `<p><span class="chat-user">${msg[0]}</span>: ${msg[1]} <br><span class="timestamp">(${msg[2]})</span></p>`;
+                    chatBox.appendChild(div);
+                });
+
+                chatBox.scrollTop = chatBox.scrollHeight;
+            } catch (error) {
+                console.error('Failed to load messages:', error);
+            }
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('chatInput');
+            const message = messageInput.value.trim();
+            const csrfToken = document.getElementById('csrf_token').value;
+
+            if (message === '') {
+                alert('Please enter a message!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/chat/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ query: message })
+                });
+
+                const result = await response.json();
+                if (response.ok && result.message === 'Message sent successfully!') {
+                    messageInput.value = '';
+                    loadMessages();
+                    await callGeminiAPI(message);
+                } else {
+                    alert(result.error || 'Failed to send the message.');
+                }
+            } catch (error) {
+                console.error('Failed to send message:', error);
+            }
+        }
+
+        async function callGeminiAPI(message) {
+            const csrfToken = document.getElementById('csrf_token').value;
+
+            try {
+                const response = await fetch('/gemini/api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ query: message })
+                });
+
+                const result = await response.json();
+                loadMessages();
+            } catch (error) {
+                console.error('Failed to call Gemini API:', error);
+            }
+        }
+
+        window.onload = function() {
+            loadMessages();
+            setInterval(loadMessages, 30000);
+
+            const sendButton = document.getElementById('sendButton');
+            sendButton.addEventListener('click', sendMessage);
+
+            const messageInput = document.getElementById('chatInput');
+            messageInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        };
+    </script>
+    
+</body>
+</html>
